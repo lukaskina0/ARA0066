@@ -29,6 +29,45 @@ def obter_feriados(ano):
         return feriados
     return []
 
+def verificar_feriados():
+    caminho_pdf = entry_pdf.get()
+    if not caminho_pdf:
+        messagebox.showwarning("Aviso", "Escolha um arquivo PDF primeiro!")
+        return
+
+    datas_pdf = ler_pdf(caminho_pdf)
+    if not datas_pdf:
+        messagebox.showinfo("Aviso", "Nenhuma data encontrada no PDF.")
+        return
+
+    datas_br = []
+    for d in datas_pdf:
+        if "-" in d:
+            partes = d.split("-")
+            datas_br.append(f"{partes[2]}/{partes[1]}/{partes[0]}")
+        else:
+            datas_br.append(d)
+
+    anos = sorted(set([d.split("/")[-1] for d in datas_br]))
+
+    feriados_por_ano = {}
+    for ano in anos:
+        feriados_por_ano[ano] = obter_feriados(ano)
+
+    resultados = []
+    for data in datas_br:
+        ano = data.split("/")[-1]
+        if data in feriados_por_ano.get(ano, []):
+            resultados.append(data)
+
+    texto_resultado.delete("1.0", tk.END)
+    if resultados:
+        texto_resultado.insert(tk.END, "Datas separadas que são feriados:\n\n")
+        for d in resultados:
+            texto_resultado.insert(tk.END, f"{d}\n")
+    else:
+        texto_resultado.insert(tk.END, "Nenhuma data do PDF é feriado nacional.")
+
 janela = tk.Tk()
 janela.title("Verificador de Feriados")
 janela.geometry("400x300")
@@ -42,11 +81,9 @@ entry_pdf.pack()
 btn_escolher = tk.Button(janela, text="Selecionar PDF", command=escolher_arquivo)
 btn_escolher.pack(pady=5)
 
-# Botão de verificar (ainda sem funcionalidade completa)
-btn_verificar = tk.Button(janela, text="Verificar Feriados")
+btn_verificar = tk.Button(janela, text="Verificar Feriados", command=verificar_feriados)
 btn_verificar.pack(pady=5)
 
-# Área de texto para resultados (ainda vazia)
 texto_resultado = tk.Text(janela, height=10, width=45)
 texto_resultado.pack(pady=10)
 
