@@ -1,11 +1,33 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
+import PyPDF2
+import re
+import requests
 
 def escolher_arquivo():
     caminho = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf")])
     if caminho:
         entry_pdf.delete(0, tk.END)
         entry_pdf.insert(0, caminho)
+
+def ler_pdf(caminho_pdf):
+    leitor = PyPDF2.PdfReader(caminho_pdf)
+    texto = ""
+    for pagina in leitor.pages:
+        texto += pagina.extract_text()
+    datas = re.findall(r"\d{4}-\d{2}-\d{2}|\d{2}/\d{2}/\d{4}", texto)
+    return datas
+
+def obter_feriados(ano):
+    url = f"https://date.nager.at/api/v3/PublicHolidays/{ano}/BR"
+    r = requests.get(url)
+    if r.status_code == 200:
+        feriados = []
+        for f in r.json():
+            data = f["date"]
+            feriados.append(f"{data[8:10]}/{data[5:7]}/{data[0:4]}")
+        return feriados
+    return []
 
 janela = tk.Tk()
 janela.title("Verificador de Feriados")
